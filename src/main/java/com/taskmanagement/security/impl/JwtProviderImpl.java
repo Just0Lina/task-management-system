@@ -3,6 +3,7 @@ package com.taskmanagement.security.impl;
 
 import com.taskmanagement.entity.User;
 import com.taskmanagement.security.JwtProvider;
+import com.taskmanagement.service.BlacklistService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -27,10 +28,14 @@ public class JwtProviderImpl implements JwtProvider {
 
     private final SecretKey jwtAccessSecret;
     private final SecretKey jwtRefreshSecret;
+    private final BlacklistService blacklistService;
 
-    public JwtProviderImpl(@Value("${jwt.secret.access}") String jwtAccessSecret, @Value("${jwt.secret.refresh}") String jwtRefreshSecret) {
+    public JwtProviderImpl(@Value("${jwt.secret.access}") String jwtAccessSecret,
+                           @Value("${jwt.secret.refresh}") String jwtRefreshSecret,
+                           BlacklistService blacklistService) {
         this.jwtAccessSecret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtAccessSecret));
         this.jwtRefreshSecret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtRefreshSecret));
+        this.blacklistService = blacklistService;
     }
 
     public String generateAccessToken(@NonNull User user) {
@@ -56,6 +61,10 @@ public class JwtProviderImpl implements JwtProvider {
     }
 
     private boolean validateToken(@NonNull String token, @NonNull SecretKey secret) {
+        if (blacklistService.isTokenBlacklisted(token)) {
+            log.error("Token is blacklisted");
+            return false;
+        }
         try {
             Jwts.parser().verifyWith(secret).build().parseSignedClaims(token).getPayload();
             return true;
