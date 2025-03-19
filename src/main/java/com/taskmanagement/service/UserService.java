@@ -1,12 +1,12 @@
 package com.taskmanagement.service;
 
 
-import com.taskmanagement.AuthServiceCommon;
 import com.taskmanagement.dto.UserPasswordDto;
 import com.taskmanagement.entity.User;
 import com.taskmanagement.exception.validation.UserNotFoundException;
 import com.taskmanagement.mappers.UserMapper;
 import com.taskmanagement.repository.UserRepository;
+import com.taskmanagement.security.AuthServiceCommon;
 import jakarta.security.auth.message.AuthException;
 import lombok.AllArgsConstructor;
 import org.apache.coyote.BadRequestException;
