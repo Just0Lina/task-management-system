@@ -31,3 +31,7 @@
 - JUnit, Mockito, Testcontainers
 - Redis (опционально для кэша)
 
+## Тестовые пользователи
+
+- ADMIN - email: **admin@example.com** password: **Admin123!**
+- USER - email: **user@example.com** password: **User123!**
