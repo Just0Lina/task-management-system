@@ -3,9 +3,7 @@ package com.taskmanagement.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
-public class LoginDto {
-    private String email;
-    private String password;
+public record LoginDto(
+        String email,
+        String password) {
 }
