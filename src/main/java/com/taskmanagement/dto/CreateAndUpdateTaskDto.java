@@ -7,8 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TaskDto {
-    private Long id;
+public class CreateAndUpdateTaskDto {
     private String title;
     private String description;
     private String status;

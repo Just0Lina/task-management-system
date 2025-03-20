@@ -53,6 +53,7 @@ public class SecurityConfig {
             configuration.addAllowedMethod(HttpMethod.POST);
             return configuration;
         }));
+
         http.csrf(AbstractHttpConfigurer::disable);
         http.httpBasic(Customizer.withDefaults());
         return http.build();
