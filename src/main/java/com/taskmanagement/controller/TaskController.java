@@ -4,6 +4,7 @@ import com.taskmanagement.dto.CreateAndUpdateTaskDto;
 import com.taskmanagement.dto.TaskDto;
 import com.taskmanagement.dto.TaskFilter;
 import com.taskmanagement.service.TaskService;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,10 +18,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -32,12 +31,6 @@ public class TaskController {
     @PostMapping
     public TaskDto createTask(@Valid @RequestBody CreateAndUpdateTaskDto taskDto) {
         return taskService.createTask(taskDto);
-    }
-
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping
-    public List<TaskDto> getAllTasks(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-        return taskService.getAllTasks(page, size);
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
@@ -59,9 +52,11 @@ public class TaskController {
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
-    @GetMapping("/tasks")
+    @GetMapping
     public Page<TaskDto> getTasks(
             TaskFilter filter,
+            @Parameter(
+                    example = "{ \"page\": 0, \"size\": 10, \"sort\": \"title,asc\" }")
             @PageableDefault(size = 20) Pageable pageable) {
         return taskService.getTasksWithFilters(filter, pageable);
     }

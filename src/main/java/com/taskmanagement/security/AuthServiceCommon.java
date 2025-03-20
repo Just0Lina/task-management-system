@@ -3,7 +3,7 @@ package com.taskmanagement.security;
 
 import com.taskmanagement.dto.UserPasswordDto;
 import com.taskmanagement.entity.Task;
-import com.taskmanagement.exception.NoRightsException;
+import com.taskmanagement.security.exceptions.NoRightsException;
 import com.taskmanagement.security.impl.JwtAuthentication;
 import org.apache.coyote.BadRequestException;
 import org.springframework.security.access.AccessDeniedException;

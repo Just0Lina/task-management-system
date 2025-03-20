@@ -7,9 +7,9 @@ import com.taskmanagement.dto.TaskFilter;
 import com.taskmanagement.entity.Task;
 import com.taskmanagement.entity.TaskPriority;
 import com.taskmanagement.entity.User;
-import com.taskmanagement.exception.NoRightsException;
 import com.taskmanagement.mappers.TaskMapper;
 import com.taskmanagement.repository.TaskRepository;
+import com.taskmanagement.security.exceptions.NoRightsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,7 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -65,28 +64,6 @@ class TaskServiceTest {
         task.setAssignee(assignee);
     }
 
-    @Test
-    void getAllTasks_RequestedTasksArePaged_ReturnsAllTasksForSpecificUser() {
-        Task task = new Task();
-        task.setId(1L);
-        task.setTitle("Test Task");
-
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Task> taskPage = new PageImpl<>(Collections.singletonList(task));
-
-        when(taskRepository.findAll(pageable)).thenReturn(taskPage);
-        when(taskMapper.taskToTaskDto(any())).thenReturn(TaskDto.builder()
-                .id(1L)
-                .title("Test Task")
-                .description("Test Task Description")
-                .build());
-
-        List<TaskDto> tasks = taskService.getAllTasks(0, 10);
-
-        assertNotNull(tasks);
-        assertEquals(1, tasks.size());
-        assertEquals("Test Task", tasks.get(0).getTitle());
-    }
 
     @Test
     void getTaskById_TaskExists_ReturnsTaskById() {

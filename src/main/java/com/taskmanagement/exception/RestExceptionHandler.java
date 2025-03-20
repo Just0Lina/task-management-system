@@ -1,7 +1,8 @@
 package com.taskmanagement.exception;
 
-import com.taskmanagement.exception.validation.ValidationException;
+import com.taskmanagement.dto.Error;
 import com.taskmanagement.security.exceptions.AuthorizationException;
+import com.taskmanagement.security.exceptions.NoRightsException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-import com.taskmanagement.dto.Error;
 
 
 @RestControllerAdvice
@@ -51,12 +51,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         String invalidTokenErrMsg = "Invalid token: " + message;
         logger.error(invalidTokenErrMsg);
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, invalidTokenErrMsg);
-    }
-
-    @ExceptionHandler({DomainException.class})
-    public ResponseEntity<Object> handleDomainException(Exception e) {
-        logger.error(e.getMessage());
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String message) {

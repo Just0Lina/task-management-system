@@ -5,20 +5,16 @@ import com.taskmanagement.dto.TaskDto;
 import com.taskmanagement.dto.TaskFilter;
 import com.taskmanagement.entity.Task;
 import com.taskmanagement.entity.User;
-import com.taskmanagement.exception.NoRightsException;
 import com.taskmanagement.mappers.TaskMapper;
 import com.taskmanagement.repository.TaskRepository;
 import com.taskmanagement.security.AuthServiceCommon;
+import com.taskmanagement.security.exceptions.NoRightsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,13 +23,6 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;
     private final UserService userService;
-
-    public List<TaskDto> getAllTasks(int page, int size) {
-        Page<Task> taskPage = taskRepository.findAll(PageRequest.of(page, size));
-        return taskPage.getContent().stream()
-                .map(taskMapper::taskToTaskDto)
-                .collect(Collectors.toList());
-    }
 
     public TaskDto getTaskById(Long id) {
         Task task = getTaskByIdOrThrow(id);

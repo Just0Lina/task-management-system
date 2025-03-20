@@ -1,5 +1,7 @@
 package com.taskmanagement.exception.validation;
 
+import com.taskmanagement.exception.ValidationException;
+
 public class UserNotFoundException extends ValidationException {
 
     private UserNotFoundException(String message) {
