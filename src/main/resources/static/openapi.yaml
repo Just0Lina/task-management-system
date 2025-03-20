@@ -1,0 +1,766 @@
+openapi: 3.1.0
+info:
+  title: Task Manager API
+  description: |
+    Task Manager API позволяет управлять задачами и комментариями, обеспечивая аутентификацию и авторизацию через JWT. 
+    Доступные роли:
+      - **ADMIN**: Полный доступ ко всем задачам (создание, редактирование, удаление, назначение исполнителей, изменение статусов и приоритетов, добавление комментариев).
+      - **USER**: Доступ к задачам, в которых пользователь назначен исполнителем (изменение статуса, добавление комментариев).
+  version: v1
+servers:
+  - url: /
+    description: Основной сервер Task Manager
+security:
+  - BearerAuth: [ ]
+paths:
+  /api/tasks/{taskId}:
+    get:
+      tags:
+        - task-controller
+      summary: Получить задачу по ID
+      security:
+        - BearerAuth: [ ]
+      description: Возвращает информацию о задаче по заданному ID. Доступно для администраторов и назначенных исполнителей.
+      operationId: getTaskById
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: ID задачи
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Информация о задаче
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDto'
+        '401':
+          description: Неавторизованный доступ. Требуется аутентификация.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized"
+        '403':
+          description: Доступ запрещён. Недостаточно прав для выполнения операции.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "403"
+                  message:
+                    type: string
+                    example: "No rights."
+    put:
+      tags:
+        - task-controller
+      summary: Обновить задачу
+      description: Позволяет обновить данные задачи. Только администратор может менять исполнителя, приоритет, описание и заголовок. Назначенный пользователь только статус, иначе ошибка доступа.
+      operationId: updateTask
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: ID задачи
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAndUpdateTaskDto'
+      responses:
+        '200':
+          description: Обновленная информация о задаче
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDto'
+        '401':
+          description: Неавторизованный доступ. Требуется аутентификация.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized"
+        '403':
+          description: Доступ запрещён. Недостаточно прав для выполнения операции.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "403"
+                  message:
+                    type: string
+                    example: "No rights."
+    delete:
+      tags:
+        - task-controller
+      summary: Удалить задачу
+      description: Удаляет задачу по ID. Только администраторы могут выполнять эту операцию.
+      operationId: deleteTask
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: ID задачи
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Задача успешно удалена
+        '403':
+          description: Доступ запрещён. Недостаточно прав для выполнения операции.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "403"
+                  error:
+                    type: string
+                    example: "Forbidden"
+
+  /api/v1/registration:
+    post:
+      tags:
+        - auth-controller
+      summary: Регистрация нового пользователя
+      description: Создает нового пользователя в системе
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPasswordDto'
+        required: true
+      responses:
+        '200':
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '400':
+          description: Ошибка при соблюдении формата пароля или почты.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "400"
+                  message:
+                    type: string
+                    example: "Invalid password, must be  4-32 symbols, and contain at least 1 digit and 1 non-digit"
+  /api/v1/logout:
+    post:
+      tags:
+        - auth-controller
+      summary: Выход из системы
+      description: Обнуляет токен аутентификации
+      operationId: logout
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      responses:
+        '200':
+          description: Успешный выход
+  /api/v1/login:
+    post:
+      tags:
+        - auth-controller
+      summary: Авторизация пользователя
+      description: Возвращает JWT-токен при успешной авторизации
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPasswordDto'
+        required: true
+      responses:
+        '200':
+          description: Успешная авторизация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '401':
+          description: Ошибка при вводе пароля.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "400"
+                  message:
+                    type: string
+                    example: "Auth failed: Wrong password."
+        '400':
+          description: Ошибка при вводе почты.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "400"
+                  message:
+                    type: string
+                    example: "User with name 'user@examwple.com' was not found"
+
+  /api/v1/auth/token:
+    post:
+      summary: Обновление access токена
+      tags:
+        - auth-controller
+      operationId: getNewAccessToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshJwtRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '401':
+          description: Ошибка при вводе refresh токена.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "401"
+                  message:
+                    type: string
+                    example: "Auth failed: Invalid JWT"
+
+  /api/v1/auth/refresh:
+    summary: Обновление refresh токена
+    post:
+      tags:
+        - auth-controller
+      operationId: getNewRefresh
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshJwtRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '401':
+          description: Ошибка при вводе refresh токена.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "401"
+                  message:
+                    type: string
+                    example: "Auth failed: Invalid JWT"
+
+  /api/tasks:
+    get:
+      tags:
+        - task-controller
+      summary: Получить список задач с фильтрацией
+      description: Возвращает список задач с возможностью фильтрации по автору, исполнителю и пагинации.
+      operationId: getTasks
+      parameters:
+        - name: filter
+          in: query
+          required: false
+          description: Фильтр задач
+          schema:
+            $ref: '#/components/schemas/TaskFilter'
+        - name: pageable
+          in: query
+          description: Параметры пагинации
+          schema:
+            $ref: '#/components/schemas/Pageable'
+          example:
+            page: 0
+            size: 10
+            sort: "title,asc"
+      responses:
+        '200':
+          description: Список задач
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageTaskDto'
+        '400':
+          description: Введен неверный параметр.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "400"
+                  message:
+                    type: string
+                    example: "Error in query: No property 'titles' found for type 'Task'; Did you mean 'title"
+        '401':
+          description: Неавторизованный доступ. Требуется аутентификация.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized"
+        '403':
+          description: Доступ запрещён. Недостаточно прав для выполнения операции.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "403"
+                  error:
+                    type: string
+                    example: "Forbidden"
+    post:
+      summary: Создать задачу
+      description: Позволяет создать задачу админу.
+      tags:
+        - task-controller
+      operationId: createTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAndUpdateTaskDto'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskDto'
+        '401':
+          description: Неавторизованный доступ. Требуется аутентификация.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized"
+        '403':
+          description: Доступ запрещён. Недостаточно прав для выполнения операции.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "403"
+                  error:
+                    type: string
+                    example: "Forbidden"
+  /api/tasks/{taskId}/comments:
+    get:
+      tags:
+        - comment-controller
+      summary: Получить комментарии к задаче
+      description: Возвращает список комментариев к задаче с возможностью пагинации.
+      operationId: getTaskComments
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: ID задачи
+          schema:
+            type: integer
+            format: int64
+        - name: pageable
+          in: query
+          description: Параметры пагинации
+          schema:
+            $ref: '#/components/schemas/Pageable'
+      responses:
+        '200':
+          description: Список комментариев
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCommentDto'
+        '400':
+          description: Ошибка при описании pageble.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "400"
+                  message:
+                    type: string
+                    example: "Error in query: No property 'string' found for type 'Comment'"
+    post:
+      tags:
+        - comment-controller
+      summary: Добавить комментарий к задаче
+      description: Позволяет добавить комментарий к задаче. Только администраторы и исполнители задачи могут выполнять эту операцию.
+      operationId: addComment
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: ID задачи
+          schema:
+            type: integer
+            format: int64
+        - name: content
+          in: query
+          required: true
+          description: Текст комментария
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Комментарий успешно добавлен
+        '400':
+          description: Ошибка при получении комментария.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "400"
+                  message:
+                    type: string
+                    example: "Task not found"
+
+        '403':
+          description: Ошибка в доступе к задачям.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: "403"
+                  message:
+                    type: string
+                    example: "No rights."
+components:
+  schemas:
+    CreateAndUpdateTaskDto:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "New task"
+          description: Название задачи
+        description:
+          type: string
+          example: "This is new task"
+          description: Описание задачи
+        status:
+          type: string
+          example: "IN_PROGRESS"
+          description: Статус задачи
+        priority:
+          type: string
+          example: "HIGH"
+          description: Приоритет задачи
+        assigneeEmail:
+          type: string
+          example: "user@example.com"
+          description: Email исполнителя
+    TaskDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 3
+          format: int64
+          description: Уникальный идентификатор задачи
+        title:
+          type: string
+          example: "New task"
+          description: Название задачи
+        description:
+          type: string
+          example: "This is new task"
+          description: Описание задачи
+        status:
+          type: string
+          example: "IN_PROGRESS"
+          description: Статус задачи
+        priority:
+          type: string
+          example: "HIGH"
+          description: Приоритет задачи
+        assigneeEmail:
+          type: string
+          example: "user@example.com"
+          description: Email исполнителя
+
+
+    UserPasswordDto:
+      type: object
+      description: "Данные для входа или регистрации пользователя"
+      properties:
+        email:
+          type: string
+          description: "Email пользователя"
+          example: "user@example.com"
+        password:
+          type: string
+          description: "Пароль пользователя"
+          example: "User123!"
+    
+    JwtResponse:
+      type: object
+      description: "Ответ с JWT токенами после успешной аутентификации"
+      properties:
+        accessToken:
+          type: string
+          description: "Токен доступа JWT"
+        refreshToken:
+          type: string
+          description: "Токен обновления JWT"
+    
+    LogoutRequest:
+      type: object
+      description: "Запрос на выход из системы с токенами"
+      properties:
+        accessToken:
+          type: string
+          description: "Текущий токен доступа"
+        refreshToken:
+          type: string
+          description: "Текущий токен обновления"
+    
+    RefreshJwtRequest:
+      type: object
+      description: "Запрос на получение нового access токена с помощью refresh токена"
+      properties:
+        refreshToken:
+          type: string
+          description: "Токен обновления JWT"
+    
+    Pageable:
+      type: object
+      description: "Параметры пагинации для запросов"
+      properties:
+        page:
+          type: integer
+          format: int32
+          example: 0
+          minimum: 0
+          description: "Номер страницы (начинается с 0)"
+        size:
+          type: integer
+          example: 3
+          format: int32
+          minimum: 1
+          description: "Количество элементов на странице"
+        sort:
+          type: string
+          description: "Сортировка в формате 'поле,asc' или 'поле,desc'"
+          example: "title,asc"
+    
+    CommentDto:
+      type: object
+      description: "Комментарий к задаче"
+      properties:
+        content:
+          type: string
+          description: "Текст комментария"
+        userEmail:
+          type: string
+          description: "Email автора комментария"
+    
+    PageCommentDto:
+      type: object
+      description: "Страница комментариев с мета-информацией"
+      properties:
+        totalElements:
+          type: integer
+          format: int64
+          description: "Общее количество комментариев"
+        totalPages:
+          type: integer
+          format: int32
+          description: "Общее количество страниц"
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
+        size:
+          type: integer
+          format: int32
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentDto'
+        number:
+          type: integer
+          format: int32
+        sort:
+          $ref: '#/components/schemas/SortObject'
+        first:
+          type: boolean
+        last:
+          type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
+        empty:
+          type: boolean
+    PageableObject:
+      type: object
+      description: "Объект, содержащий информацию о пагинации."
+      properties:
+        paged:
+          type: boolean
+          description: "Флаг, указывающий, используется ли пагинация."
+        pageNumber:
+          type: integer
+          format: int32
+          description: "Текущий номер страницы (начиная с 0)."
+        pageSize:
+          type: integer
+          format: int32
+          description: "Количество элементов на странице."
+        offset:
+          type: integer
+          format: int64
+          description: "Смещение от начала списка."
+        sort:
+          $ref: '#/components/schemas/SortObject'
+        unpaged:
+          type: boolean
+          description: "Флаг, указывающий, что данные получены без пагинации."
+    
+    SortObject:
+      type: object
+      description: "Объект, содержащий параметры сортировки."
+      properties:
+        sorted:
+          type: boolean
+          description: "Флаг, указывающий, отсортированы ли данные."
+        empty:
+          type: boolean
+          description: "Флаг, указывающий, есть ли данные для сортировки."
+        unsorted:
+          type: boolean
+          description: "Флаг, указывающий, что данные не отсортированы."
+    
+    TaskFilter:
+      type: object
+      description: "Фильтр для поиска задач."
+      properties:
+        authorEmail:
+          type: string
+          description: "Email автора задачи для фильтрации."
+        assigneeEmail:
+          type: string
+          description: "Email исполнителя задачи для фильтрации."
+    
+    PageTaskDto:
+      type: object
+      description: "Объект, содержащий список задач с пагинацией."
+      properties:
+        totalElements:
+          type: integer
+          format: int64
+          description: "Общее количество задач."
+        totalPages:
+          type: integer
+          format: int32
+          description: "Общее количество страниц."
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
+        size:
+          type: integer
+          format: int32
+          description: "Размер текущей страницы."
+        content:
+          type: array
+          description: "Список задач на текущей странице."
+          items:
+            $ref: '#/components/schemas/TaskDto'
+        number:
+          type: integer
+          format: int32
+          description: "Номер текущей страницы (начиная с 0)."
+        sort:
+          $ref: '#/components/schemas/SortObject'
+        first:
+          type: boolean
+          description: "Флаг, указывающий, является ли это первая страница."
+        last:
+          type: boolean
+          description: "Флаг, указывающий, является ли это последняя страница."
+        numberOfElements:
+          type: integer
+          format: int32
+          description: "Количество задач на текущей странице."
+        empty:
+          type: boolean
+          description: "Флаг, указывающий, пустой ли список задач."
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

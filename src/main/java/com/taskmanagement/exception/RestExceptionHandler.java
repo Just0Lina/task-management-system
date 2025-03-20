@@ -9,6 +9,7 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import org.apache.coyote.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -41,16 +42,23 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({AuthorizationException.class})
     protected ResponseEntity<Object> handleAuthorizationException(Exception e) {
-        logger.error(e.getMessage());
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Auth failed: " + e.getMessage());
+        String authFailed = "Auth failed: " + e.getMessage();
+        logger.error(authFailed);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, authFailed);
     }
 
     @ExceptionHandler({ExpiredJwtException.class, MalformedJwtException.class, UnsupportedJwtException.class})
     protected ResponseEntity<Object> handleJwtException(RuntimeException e) {
-        String message = e.getMessage();
-        String invalidTokenErrMsg = "Invalid token: " + message;
+        String invalidTokenErrMsg = "Invalid token: " + e.getMessage();
         logger.error(invalidTokenErrMsg);
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, invalidTokenErrMsg);
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<Object> handlePropertyReferenceException(PropertyReferenceException e) {
+        String invalidParamErrMsg = "Error in query: " + e.getMessage();
+        logger.error(invalidParamErrMsg);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, invalidParamErrMsg);
     }
 
     private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String message) {

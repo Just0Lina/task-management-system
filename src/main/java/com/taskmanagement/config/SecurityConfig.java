@@ -30,11 +30,14 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(requests -> requests
                         .requestMatchers(
+                                "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources",
                                 "/webjars/**",
-                                "/configuration/**"
+                                "/configuration/**",
+                                "/static/openapi.yaml",
+                                "/openapi.yaml"
                         ).permitAll()
                         .requestMatchers("/api/v1/login").permitAll()
                         .requestMatchers("/api/v1/auth/refresh").permitAll()
