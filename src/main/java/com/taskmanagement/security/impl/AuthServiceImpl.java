@@ -6,6 +6,7 @@ import com.taskmanagement.dto.UserPasswordDto;
 import com.taskmanagement.entity.User;
 import com.taskmanagement.security.AuthService;
 import com.taskmanagement.security.exceptions.AuthorizationException;
+import com.taskmanagement.security.exceptions.WrongPasswordException;
 import com.taskmanagement.service.BlacklistService;
 import com.taskmanagement.service.UserService;
 import io.jsonwebtoken.Claims;
@@ -47,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
             return getJwtResponse(user);
         } else {
             log.error(WRONG_PASSWORD_MESSAGE);
-            throw new AuthorizationException(WRONG_PASSWORD_MESSAGE);
+            throw new WrongPasswordException();
         }
     }
 

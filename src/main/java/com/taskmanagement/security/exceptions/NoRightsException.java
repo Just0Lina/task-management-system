@@ -1,6 +1,4 @@
-package com.taskmanagement.exception;
-
-import com.taskmanagement.security.exceptions.AuthorizationException;
+package com.taskmanagement.security.exceptions;
 
 public class NoRightsException extends AuthorizationException {
     public NoRightsException() {

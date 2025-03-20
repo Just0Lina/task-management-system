@@ -1,6 +1,8 @@
 package com.taskmanagement.security.impl;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.springframework.security.core.Authentication;
@@ -16,11 +18,13 @@ import java.util.List;
  */
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @ToString
 public class JwtAuthentication implements Authentication {
 
     private boolean authenticated;
-    private String userName;
+    private String email;
     private String roleName;
 
     @Override
@@ -42,7 +46,7 @@ public class JwtAuthentication implements Authentication {
 
     @Override
     public Object getPrincipal() {
-        return userName;
+        return email;
     }
 
     @Override
@@ -57,7 +61,7 @@ public class JwtAuthentication implements Authentication {
 
     @Override
     public String getName() {
-        return userName;
+        return email;
     }
 
 }
