@@ -1,11 +1,13 @@
 package com.taskmanagement.dto;
 
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 public class CreateAndUpdateTaskDto {
     private String title;
